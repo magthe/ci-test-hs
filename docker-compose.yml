@@ -1,0 +1,7 @@
+version: '3'
+services:
+  server:
+    build: .
+    command: stack exec ci-test-hs
+    ports:
+      - "3001:3000"
