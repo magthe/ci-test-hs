@@ -1,0 +1,12 @@
+name: ci-test-hs
+version: "0.0.1.0"
+
+dependencies:
+  - base
+  - containers
+  - text
+  - scotty
+
+executables:
+  ci-test-hs:
+    main: Main.hs
