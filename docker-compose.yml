@@ -5,3 +5,9 @@ services:
     command: stack exec ci-test-hs
     ports:
       - "3001:3000"
+
+  server-circleci:
+    image: magthe/ci-test-hs:master
+    command: /usr/local/bin/ci-test-hs
+    ports:
+      - "3002:3000"

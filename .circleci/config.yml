@@ -28,7 +28,7 @@ jobs:
       - run:
           name: Build and test (well, for now just install)
           command: |
-            stack install
+            stack build
 
       # I would much rather use a pre-packaged version, but this will do or now
       - run:
@@ -43,10 +43,19 @@ jobs:
       - setup_remote_docker:
           docker_layer_caching: true
 
+      # - run:
+      #     name: Build Docker image
+      #     command: |
+      #         docker build -t magthe/ci-test-hs:${CIRCLE_BRANCH} .
+      #         docker tag magthe/ci-test-hs:${CIRCLE_BRANCH} magthe/ci-test-hs:${CIRCLE_BRANCH}-${CIRCLE_BUILD_NUM}
+      #         docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWD}
+      #         docker push magthe/ci-test-hs
+
       - run:
-          name: Build Docker image
+          name: Build Docker image (stack)
           command: |
-              docker build -t magthe/ci-test-hs:${CIRCLE_BRANCH} .
-              docker tag magthe/ci-test-hs:${CIRCLE_BRANCH} magthe/ci-test-hs:${CIRCLE_BRANCH}-${CIRCLE_BUILD_NUM}
-              docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWD}
-              docker push magthe/ci-test-hs
+            stack image container
+            docker tag ci-test-hs:latest magthe/ci-test-hs:${CIRCLE_BRANCH}
+            docker tag magthe/ci-test-hs:${CIRCLE_BRANCH} magthe/ci-test-hs:${CIRCLE_BRANCH}-${CIRCLE_BUILD_NUM}
+            docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWD}
+            docker push magthe/ci-test-hs

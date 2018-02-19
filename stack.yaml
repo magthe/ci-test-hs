@@ -1,12 +1,11 @@
 resolver: lts-10.5
 
+image:
+  container:
+    base: fpco/stack-run
+    name: ci-test-hs
+
 packages:
-- .
-
-# extra-deps: []
-
-# flags: {}
-
-# extra-package-dbs: []
+  - .
 
 system-ghc: false
