@@ -3,7 +3,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: fpco/stack-build:lts-10.5
+      - image: fpco/stack-build:lts-13
 
     working_directory: ~/repo
 
@@ -17,8 +17,8 @@ jobs:
       - run:
           name: Setup GHC and dependencies
           command: |
-            stack setup
-            stack install --dependencies-only
+            stack --no-terminal setup
+            stack --no-terminal install --dependencies-only
 
       - save_cache:
           paths:
@@ -28,7 +28,7 @@ jobs:
       - run:
           name: Build and test (well, for now just build)
           command: |
-            stack build
+            stack --no-terminal build
 
       # I would much rather use a pre-packaged version, but this will do or now
       - run:
@@ -40,40 +40,24 @@ jobs:
             tar -xz -C /tmp -f /tmp/docker-$VER.tgz
             mv /tmp/docker/* /usr/bin
 
-      - setup_remote_docker:
-          docker_layer_caching: true
-
-      # - run:
-      #     name: Build Docker image
-      #     command: |
-      #         docker build -t magthe/ci-test-hs:${CIRCLE_BRANCH} .
-      #         docker tag magthe/ci-test-hs:${CIRCLE_BRANCH} magthe/ci-test-hs:${CIRCLE_BRANCH}-${CIRCLE_BUILD_NUM}
-      #         docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWD}
-      #         docker push magthe/ci-test-hs
+      - setup_remote_docker
 
       - run:
-          name: Build Docker image (stack)
+          name: Build Docker image
           command: |
-            stack image container
-            docker tag ci-test-hs:latest magthe/ci-test-hs:${CIRCLE_BRANCH}
-            docker tag magthe/ci-test-hs:${CIRCLE_BRANCH} magthe/ci-test-hs:${CIRCLE_BRANCH}-${CIRCLE_BUILD_NUM}
-            docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWD}
-            docker push magthe/ci-test-hs
+              docker build -t magthe/ci-test-hs:circle-${CIRCLE_BRANCH} .
+              docker tag magthe/ci-test-hs:circle-${CIRCLE_BRANCH} magthe/ci-test-hs:circle-${CIRCLE_BRANCH}-${CIRCLE_BUILD_NUM}
+              docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWD}
+              docker push magthe/ci-test-hs
 
   verify_hlint:
     docker:
-      - image: fpco/stack-build:lts-10.5
+      - image: fpco/stack-build:lts-13
 
     working_directory: ~/repo
 
     steps:
       - checkout
-
-      - run:
-          name: Install hlint
-          command: |
-            apt-get update
-            apt-get install -y hlint
 
       - run:
           name: Lint
