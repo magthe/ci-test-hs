@@ -9,13 +9,19 @@ steps:
       - pwd
       - ls -al
 
-  - name: setup
+  - name: hlint
     image: fpco/stack-build:lts-13
     commands:
-      - stack --no-terminal setup
-      - stack --no-terminal build --dependencies-only
+      - hlint .
 
-  - name: build
-    image: fpco/stack-build:lts-13
-    commands:
-      - stack --no-terminal build
+  - name: build and upload to dockerhub
+    image: plugins/docker
+    settings:
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
+      repo: magthe/ci-test-hs
+      tags:
+        - "drone-${DRONE_BRANCH}"
+        - "drone-${DRONE_BRANCH}-${DRONE_BUILD_NUMBER}"
