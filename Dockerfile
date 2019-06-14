@@ -1,4 +1,4 @@
-FROM fpco/stack-build:lts-10.5
+FROM fpco/stack-build:lts-13.5
 
 WORKDIR /app
 
