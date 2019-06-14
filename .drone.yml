@@ -1,0 +1,21 @@
+kind: pipeline
+name: default
+
+steps:
+  - name: inspect
+    image: fpco/stack-build:lts-13
+    commands:
+      - env
+      - pwd
+      - ls -al
+
+  - name: setup
+    image: fpco/stack-build:lts-13
+    commands:
+      - stack --no-terminal setup
+      - stack --no-terminal build --dependencies-only
+
+  - name: build
+    image: fpco/stack-build:lts-13
+    commands:
+      - stack --no-terminal build
