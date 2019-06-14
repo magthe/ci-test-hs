@@ -1,9 +1,4 @@
-resolver: lts-10.5
-
-image:
-  container:
-    base: fpco/stack-run
-    name: ci-test-hs
+resolver: lts-13.25
 
 packages:
   - .
