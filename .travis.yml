@@ -1,0 +1,40 @@
+sudo: false
+services:
+  - docker
+
+language: generic
+
+cache:
+  directories:
+    - $HOME/.stack
+
+before_install:
+  - mkdir -p ~/.local/bin
+  - export PATH=$HOME/.local/bin:$PATH
+  - >
+    travis_retry curl -L https://github.com/commercialhaskell/stack/releases/download/v2.1.1/stack-2.1.1-linux-x86_64-static.tar.gz |
+    tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
+
+stages:
+  - prepare
+  - test
+  - deploy
+
+jobs:
+  include:
+    - stage: prepare
+      name: "Prepare cache"
+      script: stack --no-terminal build --test --only-dependencies
+
+    - stage: test
+      name: hlint
+      script: .travis/build-and-run-hlint
+
+    - stage: test
+      name: build
+      script: stack --no-terminal build --test
+
+    - stage: deploy
+      name: "Build and deploy"
+      script: .travis/build-docker
+      if: type = push

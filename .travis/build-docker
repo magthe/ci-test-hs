@@ -1,0 +1,10 @@
+#! /bin/bash
+
+set -euo pipefail
+
+docker build -t magthe/ci-test-hs:travis-${TRAVIS_BRANCH} .
+docker tag magthe/ci-test-hs:travis-${TRAVIS_BRANCH} \
+       magthe/ci-test-hs:travis-${TRAVIS_BRANCH}-${TRAVIS_BUILD_NUMBER}
+
+echo ${DOCKER_PASSWORD} | docker login -u ${DOCKER_USER} --password-stdin
+docker push magthe/ci-test-hs
