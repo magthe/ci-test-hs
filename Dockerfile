@@ -11,6 +11,6 @@ RUN stack --no-terminal install --only-dependencies
 
 COPY Main.hs Main.hs
 
-RUN stack --no-terminal install
+RUN stack --no-terminal --colour never install
 
 CMD stack exec ci-test-hs
