@@ -1,16 +1,5 @@
-FROM fpco/stack-build:lts-13
+FROM ubuntu:cosmic as base
 
-WORKDIR /app
+COPY dest/* /usr/local/bin/
 
-COPY stack.yaml stack.yaml
-COPY package.yaml package.yaml
-COPY LICENSE LICENSE
-
-RUN stack --no-terminal setup
-RUN stack --no-terminal install --only-dependencies
-
-COPY Main.hs Main.hs
-
-RUN stack --no-terminal --colour never install
-
-CMD stack exec ci-test-hs
+CMD /usr/local/bin/ci-test-hs
