@@ -14,6 +14,11 @@ steps:
     commands:
       - hlint .
 
+  - name: build
+    image: fpco/stack-build:lts-13
+    commands:
+      - stack --local-bin-path dest build --copy-bins --test
+
   - name: build and upload to dockerhub
     image: plugins/docker
     settings:

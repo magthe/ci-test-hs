@@ -26,9 +26,9 @@ jobs:
           key: v1-dependencies-{{ checksum "stack.yaml" }}
 
       - run:
-          name: Build and test (well, for now just build)
+          name: Build and test
           command: |
-            stack --no-terminal build
+            stack --local-bin-path dest build --copy-bins --test
 
       # I would much rather use a pre-packaged version, but this will do or now
       - run:

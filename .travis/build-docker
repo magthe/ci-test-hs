@@ -2,6 +2,8 @@
 
 set -euo pipefail
 
+stack --local-bin-path dest build --copy-bins --test
+
 docker build -t magthe/ci-test-hs:travis-${TRAVIS_BRANCH} .
 docker tag magthe/ci-test-hs:travis-${TRAVIS_BRANCH} \
        magthe/ci-test-hs:travis-${TRAVIS_BRANCH}-${TRAVIS_BUILD_NUMBER}
