@@ -85,3 +85,12 @@ blocks:
         - name: Build image
           commands:
             - docker build -t magthe/ci-test-hs:semaphore-${SEMAPHORE_GIT_BRANCH} .
+            - docker tag magthe/ci-test-hs:semaphore-${SEMAPHORE_GIT_BRANCH} magthe/ci-test-hs:semaphore-${SEMAPHORE_GIT_BRANCH}-${SEMAPHORE_WORKFLOW_ID}
+            - docker image ls
+
+  - name: Inspect a bit more
+    task:
+      jobs:
+        - name: Inspect Docker
+          commands:
+            - docker image ls
