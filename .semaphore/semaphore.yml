@@ -1,0 +1,90 @@
+# A simple config for Semaphore
+
+version: v1.0
+
+name: A Haskell example project
+
+agent:
+  machine:
+    type: e1-standard-2
+
+  containers:
+    - name: main
+      image: semaphoreci/haskell:8.6
+
+blocks:
+
+  - name: Inspection
+    dependencies: []
+    task:
+      jobs:
+        - name: Inspect environment
+          commands:
+            - pwd
+            - ls -alh
+            - id
+            - groups
+            - env
+
+
+  - name: Set up
+    dependencies: []
+    task:
+      env_vars:
+        - name: STACK_ROOT
+          value: /root/ci-test-hs/.stack-root
+
+      prologue:
+        commands:
+          - checkout
+          - mkdir -p $STACK_ROOT
+
+      jobs:
+        - name: Setup GHC and build dependencies
+          commands:
+            - cache restore stack-cache-2-$(checksum package.yaml)-$(checksum stack.yaml)
+            - stack setup
+            - stack build --dependencies-only
+            - cache store stack-cache-2-$(checksum package.yaml)-$(checksum stack.yaml) .stack-root
+
+  - name: Binaries
+    dependencies: ["Set up"]
+    task:
+      env_vars:
+        - name: STACK_ROOT
+          value: /root/ci-test-hs/.stack-root
+
+      prologue:
+        commands:
+          - checkout
+          - mkdir -p $STACK_ROOT
+          - cache restore stack-cache-2-$(checksum package.yaml)-$(checksum stack.yaml)
+
+      jobs:
+        - name: Test
+          commands:
+            - stack build --test
+
+        - name: Build and install
+          commands:
+            - stack --local-bin-path dest install
+            - cache store binaries-$SEMAPHORE_PIPELINE_ARTEFACT_ID dest
+
+  - name: Docker image
+    dependencies: ["Binaries", "Inspection"]
+    task:
+      secrets:
+        - name: dockerhub-secrets
+
+      prologue:
+        commands:
+          - checkout
+          - cache restore binaries-$SEMAPHORE_PIPELINE_ARTEFACT_ID
+          - echo "${DOCKER_PASSWD}" | docker login -u "${DOCKER_USER}" --password-stdin
+
+      jobs:
+        - name: Build image
+          commands:
+            - docker build -t magthe/ci-test-hs:semaphore-${SEMAPHORE_GIT_BRANCH} .
+            - docker tag magthe/ci-test-hs:semaphore-${SEMAPHORE_GIT_BRANCH} magthe/ci-test-hs:semaphore-${SEMAPHORE_GIT_BRANCH}-${SEMAPHORE_WORKFLOW_ID}
+            - docker push magthe/ci-test-hs
