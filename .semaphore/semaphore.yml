@@ -1,0 +1,87 @@
+# A simple config for Semaphore
+
+version: v1.0
+
+name: A Haskell example project
+
+agent:
+  machine:
+    type: e1-standard-2
+
+  containers:
+    - name: main
+      image: semaphoreci/haskell:8.6
+
+blocks:
+  - name: Set up
+    task:
+      env_vars:
+        - name: STACK_ROOT
+          value: /root/ci-test-hs/.stack-root
+
+      prologue:
+        commands:
+          - checkout
+          - mkdir -p $STACK_ROOT
+
+      jobs:
+        - name: Check the code
+          commands:
+            - pwd
+            - ls -alh
+
+        - name: Inspect environment
+          commands:
+            - env | sort
+
+        - name: Inspect user
+          commands:
+            - whoami
+            - groups
+            - id
+
+        - name: Setup GHC and build dependencies
+          commands:
+            - cache restore stack-cache-2-$(checksum package.yaml)-$(checksum stack.yaml)
+            - stack setup
+            - stack build --dependencies-only
+            - cache store stack-cache-2-$(checksum package.yaml)-$(checksum stack.yaml) .stack-root
+
+  - name: Build binaries
+    task:
+      env_vars:
+        - name: STACK_ROOT
+          value: /root/ci-test-hs/.stack-root
+
+      prologue:
+        commands:
+          - checkout
+          - mkdir -p $STACK_ROOT
+          - cache restore stack-cache-2-$(checksum package.yaml)-$(checksum stack.yaml)
+
+      jobs:
+        - name: Test
+          commands:
+            - stack build --test
+
+        - name: Build and install
+          commands:
+            - stack --local-bin-path dest install
+            - cache store binaries-$SEMAPHORE_PIPELINE_ARTEFACT_ID dest
+
+  - name: Build Docker image
+    task:
+      prologue:
+        commands:
+          - checkout
+          - cache restore binaries-$SEMAPHORE_PIPELINE_ARTEFACT_ID
+
+      jobs:
+        - name: Inspect
+          commands:
+            - env | sort
+            - ls -hl
+
+        - name: Build image
+          commands:
+            - docker build -t magthe/ci-test-hs:semaphore-${SEMAPHORE_GIT_BRANCH} .
