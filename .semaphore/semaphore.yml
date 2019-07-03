@@ -71,10 +71,14 @@ blocks:
 
   - name: Build Docker image
     task:
+      secrets:
+        - name: dockerhub-secrets
+
       prologue:
         commands:
           - checkout
           - cache restore binaries-$SEMAPHORE_PIPELINE_ARTEFACT_ID
+          - echo "${DOCKER_PASSWD}" | docker login -u "${DOCKER_USER}" --password-stdin
 
       jobs:
         - name: Inspect
@@ -86,11 +90,4 @@ blocks:
           commands:
             - docker build -t magthe/ci-test-hs:semaphore-${SEMAPHORE_GIT_BRANCH} .
             - docker tag magthe/ci-test-hs:semaphore-${SEMAPHORE_GIT_BRANCH} magthe/ci-test-hs:semaphore-${SEMAPHORE_GIT_BRANCH}-${SEMAPHORE_WORKFLOW_ID}
-            - docker image ls
-
-  - name: Inspect a bit more
-    task:
-      jobs:
-        - name: Inspect Docker
-          commands:
-            - docker image ls
+            - docker push magthe/ci-test-hs
