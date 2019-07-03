@@ -25,20 +25,13 @@ blocks:
           - mkdir -p $STACK_ROOT
 
       jobs:
-        - name: Check the code
+        - name: Inspect environment
           commands:
             - pwd
             - ls -alh
-
-        - name: Inspect environment
-          commands:
-            - env | sort
-
-        - name: Inspect user
-          commands:
-            - whoami
-            - groups
             - id
+            - groups
+            - env
 
         - name: Setup GHC and build dependencies
           commands:
@@ -47,7 +40,7 @@ blocks:
             - stack build --dependencies-only
             - cache store stack-cache-2-$(checksum package.yaml)-$(checksum stack.yaml) .stack-root
 
-  - name: Build binaries
+  - name: Binaries
     task:
       env_vars:
         - name: STACK_ROOT
@@ -69,7 +62,7 @@ blocks:
             - stack --local-bin-path dest install
             - cache store binaries-$SEMAPHORE_PIPELINE_ARTEFACT_ID dest
 
-  - name: Build Docker image
+  - name: Docker image
     task:
       secrets:
         - name: dockerhub-secrets
@@ -81,11 +74,6 @@ blocks:
           - echo "${DOCKER_PASSWD}" | docker login -u "${DOCKER_USER}" --password-stdin
 
       jobs:
-        - name: Inspect
-          commands:
-            - env | sort
-            - ls -hl
-
         - name: Build image
           commands:
             - docker build -t magthe/ci-test-hs:semaphore-${SEMAPHORE_GIT_BRANCH} .
